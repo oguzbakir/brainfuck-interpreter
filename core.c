@@ -10,6 +10,7 @@
 //Size defns
 #define STACK_SIZE                  4096
 #define PROGRAM_SIZE                65535
+#define BINARY_SIZE                 262144
 
 //Stack defns
 #define STACK_POP()                 (STACK[--SP])
@@ -36,8 +37,7 @@ struct instr_t
 };
 
 static struct instr_t program[PROGRAM_SIZE];
-static unsigned int STACK[STACK_SIZE];
-static unsigned int sp = 0;
+static unsigned int STACK[STACK_SIZE], sp = 0;
 
 int compile_brainfuck(FILE* fp) {
     unsigned int pc = 0, jmp;
@@ -74,6 +74,28 @@ int compile_brainfuck(FILE* fp) {
 }
 
 int execute_brainfuck() {
+    unsigned int bin[BINARY_SIZE], pc = 0, ptr = BINARY_SIZE;
+    while (ptr--) bin[ptr] = 0; //Fill binary with zeros
+    while (program[pc].operator != END ptr < BINARY_SIZE){
+        switch (program[pc].operator){
+            case INCREMENT_PTR: ptr++; break;
+            case DECREMENT_PTR: ptr--; break;
+            case INCREMENT_BYTE_PTR: bin[ptr]++; break;
+            case DECREMENT_BYTE_PTR: bin[ptr]--; break;
+            case OUTPUT_PTR: putchar(bin[ptr]); break;
+            case INPUT_PTR: bin[ptr] = (unsigned int) getchar(); break;
+            case JUMP_FORWARD_PTR: 
+                if (!bin[ptr]) pc = program[pc].operand;
+                break;
+            case JUMP_BACKWARD_PTR:
+                if (bin[ptr]) pc = program[pc].operand;
+                break;
+            default: return EXECUTE_FAILURE; //TODO: Handle signals
+        }
+        pc++; //Increment program counter every cycle
+    }
+    if (ptr == BINARY_SIZE) return EXECUTE_FAILURE; //TODO: Handle signals
+
     return EXECUTE_SUCCESS;
 }
 
