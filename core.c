@@ -14,7 +14,7 @@
 
 //Stack defns
 #define STACK_POP()                 (STACK[--SP])
-#define STACK_PUSH(A)                (STACK[SP++] = A)
+#define STACK_PUSH(A)               (STACK[SP++] = A)
 #define STACK_IS_EMPTY()            (SP == 0)
 #define STACK_IS_FULL()             (SP == STACK_SIZE)
 
@@ -37,13 +37,13 @@ struct instr_t
 };
 
 static struct instr_t program[PROGRAM_SIZE];
-static unsigned int STACK[STACK_SIZE], sp = 0;
+static unsigned int STACK[STACK_SIZE], SP = 0;
 
 int compile_brainfuck(FILE* fp) {
     unsigned int pc = 0, jmp;
     char c = getc(fp);
     while (c != EOF && pc < PROGRAM_SIZE){
-        switch (){
+        switch (c){
             case '>': program[pc].operator = INCREMENT_PTR; break;
             case '<': program[pc].operator = DECREMENT_PTR; break;
             case '+': program[pc].operator = INCREMENT_BYTE_PTR; break;
@@ -52,10 +52,10 @@ int compile_brainfuck(FILE* fp) {
             case ',': program[pc].operator = INPUT_PTR; break;
             case '[': program[pc].operator = JUMP_FORWARD_PTR;
                 if (STACK_IS_FULL()) return COMPILATION_FAILURE; //TODO: Edit signal
-                STACK_PUSH();
+                STACK_PUSH(pc);
                 break;
             case ']':
-                if (STACK_IS_EMPTY) return COMPILATION_FAILURE; //TODO: Edit signal
+                if (STACK_IS_EMPTY()) return COMPILATION_FAILURE; //TODO: Edit signal
                 jmp = STACK_POP();
                 program[pc].operator = JUMP_BACKWARD_PTR;
                 program[pc].operand = jmp;
@@ -66,7 +66,7 @@ int compile_brainfuck(FILE* fp) {
         pc++; //Increment program counter every cycle
     }
     if (pc == PROGRAM_SIZE) return COMPILATION_FAILURE; //TODO: Handle signals
-    if (!STACK_IS_EMPTY) return COMPILATION_FAILURE; //TODO: Handle signals
+    if (!STACK_IS_EMPTY()) return COMPILATION_FAILURE; //TODO: Handle signals
 
     program[pc].operator = END;
 
@@ -76,7 +76,7 @@ int compile_brainfuck(FILE* fp) {
 int execute_brainfuck() {
     unsigned int bin[BINARY_SIZE], pc = 0, ptr = BINARY_SIZE;
     while (ptr--) bin[ptr] = 0; //Fill binary with zeros
-    while (program[pc].operator != END ptr < BINARY_SIZE){
+    while (program[pc].operator != END && ptr < BINARY_SIZE){
         switch (program[pc].operator){
             case INCREMENT_PTR: ptr++; break;
             case DECREMENT_PTR: ptr--; break;
