@@ -9,6 +9,7 @@
 
 //Size defns
 #define STACK_SIZE                  4096
+#define PROGRAM_SIZE                65535
 
 //Stack defns
 #define STACK_POP()                 (STACK[--SP])
@@ -21,6 +22,21 @@ static unsigned long STACK[STACK_SIZE];
 static unsigned int sp = 0;
 
 int compile_brainfuck(FILE* fp) {
+    unsigned long pc = 0, jmp;
+    char c = getc(fp);
+    while (c != EOF && pc < PROGRAM_SIZE){
+        switch (){
+            case '>': break;
+            case '<': break;
+            case '+': break;
+            case '-': break;
+            case '.': break;
+            case ',': break;
+            case '[': break;
+            case ']': break;
+            default: pc--; break;
+        }
+    }
     return COMPILATION_SUCCESS;
 }
 
