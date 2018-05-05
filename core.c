@@ -13,7 +13,7 @@
 
 //Stack defns
 #define STACK_POP()                 (STACK[--SP])
-#define STACK_PUSH()                (STACK[SP++])
+#define STACK_PUSH(A)                (STACK[SP++] = A)
 #define STACK_IS_EMPTY()            (SP == 0)
 #define STACK_IS_FULL()             (SP == STACK_SIZE)
 
