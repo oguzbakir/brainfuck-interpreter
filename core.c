@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 
 //Compile and execute signal defns
 #define COMPILATION_SUCCESS         0
 #define COMPILATION_FAILURE         1
-#define EXECUTE_SUCCESS             2 //TODO: Handle execute return codes
-#define EXECUTE_FAILURE             3
+#define COMPILATION_OVERFLOW        2
+#define EXECUTE_SUCCESS             10 //TODO: Handle execute return codes
+#define EXECUTE_FAILURE             11
 
 //Size defns
 #define STACK_SIZE                  4096
@@ -65,7 +67,7 @@ int compile_brainfuck(FILE* fp) {
         }
         pc++; //Increment program counter every cycle
     }
-    if (pc == PROGRAM_SIZE) return COMPILATION_FAILURE; //TODO: Handle signals
+    if (pc == PROGRAM_SIZE) return COMPILATION_OVERFLOW; //TODO: Handle signals
     if (!STACK_IS_EMPTY()) return COMPILATION_FAILURE; //TODO: Handle signals
 
     program[pc].operator = END;
@@ -119,9 +121,16 @@ int main(int argc, const char * argv[])
     fclose(fp);
     
     if (status == COMPILATION_SUCCESS) status = execute_brainfuck();
-    if (status == COMPILATION_FAILURE){
+    else if (status == COMPILATION_OVERFLOW) {
+        printf("Compilation overflow.\n");
+        exit(EXIT_FAILURE);
+    }
+    else if (status == COMPILATION_FAILURE){
         printf("Compilation Error!\n");  //TODO: Somehow handle errors.
         exit(EXIT_FAILURE);
+    } else {
+        printf("WTF?\n");
+        raise(SIGSEGV);
     }
     return status;
 }
