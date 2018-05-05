@@ -17,26 +17,59 @@
 #define STACK_IS_EMPTY()            (SP == 0)
 #define STACK_IS_FULL()             (SP == STACK_SIZE)
 
+//Operations
+#define INCREMENT_PTR               1
+#define DECREMENT_PTR               2
+#define INCREMENT_BYTE_PTR          3
+#define DECREMENT_BYTE_PTR          4
+#define OUTPUT_PTR                  5
+#define INPUT_PTR                   6
+#define JUMP_FORWARD_PTR            7
+#define JUMP_BACKWARD_PTR           8
+#define END                         9
 
-static unsigned long STACK[STACK_SIZE];
+
+struct instr_t
+{
+    unsigned int operator;
+    unsigned int operand;
+};
+
+static struct instr_t program[PROGRAM_SIZE];
+static unsigned int STACK[STACK_SIZE];
 static unsigned int sp = 0;
 
 int compile_brainfuck(FILE* fp) {
-    unsigned long pc = 0, jmp;
+    unsigned int pc = 0, jmp;
     char c = getc(fp);
     while (c != EOF && pc < PROGRAM_SIZE){
         switch (){
-            case '>': break;
-            case '<': break;
-            case '+': break;
-            case '-': break;
-            case '.': break;
-            case ',': break;
-            case '[': break;
-            case ']': break;
+            case '>': program[pc].operator = INCREMENT_PTR; break;
+            case '<': program[pc].operator = DECREMENT_PTR; break;
+            case '+': program[pc].operator = INCREMENT_BYTE_PTR; break;
+            case '-': program[pc].operator = DECREMENT_BYTE_PTR; break;
+            case '.': program[pc].operator = OUTPUT_PTR; break;
+            case ',': program[pc].operator = INPUT_PTR; break;
+            case '[': program[pc].operator = JUMP_FORWARD_PTR;
+                if (STACK_IS_FULL()) return COMPILATION_FAILURE; //TODO: Edit signal
+                STACK_PUSH();
+                break;
+            case ']':
+                if (STACK_IS_EMPTY) return COMPILATION_FAILURE; //TODO: Edit signal
+                jmp = STACK_POP();
+                program[pc].operator = JUMP_BACKWARD_PTR;
+                program[pc].operand = jmp;
+                program[jmp].operand = pc;
+                break;
             default: pc--; break;
         }
+        pc++; //Increment program counter every cycle
     }
+    if (pc == PROGRAM_SIZE) return COMPILATION_FAILURE; //TODO: Handle signals
+    if (!STACK_IS_EMPTY) return COMPILATION_FAILURE; //TODO: Handle signals
+
+    program[pc].operator = END;
+
     return COMPILATION_SUCCESS;
 }
 
