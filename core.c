@@ -6,6 +6,8 @@
 #define COMPILATION_SUCCESS         0
 #define COMPILATION_FAILURE         1
 #define COMPILATION_OVERFLOW        2
+#define COMPILATION_STACKOVERFLOW   3
+#define COMPILATION_WTF             9
 #define EXECUTE_SUCCESS             10 //TODO: Handle execute return codes
 #define EXECUTE_FAILURE             11
 #define EXECUTE_OVERFLOW            12
@@ -79,11 +81,11 @@ int compile_brainfuck(FILE* fp) {
             case '.': program[pc].operator = OUTPUT_PTR; break;
             case ',': program[pc].operator = INPUT_PTR; break;
             case '[': program[pc].operator = JUMP_FORWARD_PTR;
-                if (STACK_IS_FULL()) return COMPILATION_FAILURE; //TODO: Edit signal
+                if (STACK_IS_FULL()) return COMPILATION_STACKOVERFLOW;
                 STACK_PUSH(pc);
                 break;
             case ']':
-                if (STACK_IS_EMPTY()) return COMPILATION_FAILURE; //TODO: Edit signal
+                if (STACK_IS_EMPTY()) return COMPILATION_WTF;
                 jmp = STACK_POP();
                 program[pc].operator = JUMP_BACKWARD_PTR;
                 program[pc].operand = jmp;
@@ -93,8 +95,8 @@ int compile_brainfuck(FILE* fp) {
         }
         pc++; //Increment program counter every cycle
     }
-    if (pc == PROGRAM_SIZE) return COMPILATION_OVERFLOW; //TODO: Handle signals
-    if (!STACK_IS_EMPTY()) return COMPILATION_FAILURE; //TODO: Handle signals
+    if (pc == PROGRAM_SIZE) return COMPILATION_OVERFLOW;
+    if (!STACK_IS_EMPTY()) return COMPILATION_WTF;
 
     program[pc].operator = END;
 
@@ -118,11 +120,14 @@ int execute_brainfuck() {
             case JUMP_BACKWARD_PTR:
                 if (bin[ptr]) pc = program[pc].operand;
                 break;
-            default: return EXECUTE_FAILURE; break; //TODO: Handle signals
+            default: {
+                return EXECUTE_FAILURE;
+                break; //TODO: Handle signals
+            }
         }
         pc++; //Increment program counter every cycle
     }
-    if (ptr == BINARY_SIZE) return EXECUTE_FAILURE; //TODO: Handle signals
+    if (ptr == BINARY_SIZE) return EXECUTE_OVERFLOW;
 
     return EXECUTE_SUCCESS;
 }
@@ -153,18 +158,57 @@ int main(int argc, const char * argv[])
     
     status = compile_brainfuck(fp);
     fclose(fp);
+
+    switch (status){
+        case COMPILATION_SUCCESS: {
+            status = execute_brainfuck();
+            break;
+        }
+        case COMPILATION_OVERFLOW: {
+            printf("Compilation overflow. Max size is 65Kb\n");
+            exit(EXIT_FAILURE);
+            break;
+        }
+        case COMPILATION_STACKOVERFLOW: {
+            printf("Stack overflown, please check your code\n");
+            exit(EXIT_FAILURE);
+            break;
+        }
+        case COMPILATION_FAILURE: {
+            printf("Compilation Error!\n");  //TODO: Somehow handle errors.
+            exit(EXIT_FAILURE);
+            break;
+        }
+        case COMPILATION_WTF: {
+            printf("WTF?\n");
+            raise(SIGSEGV);
+            break;
+        }
+        default: {
+            printf("WTF?\n");
+            raise(SIGSEGV);
+            break;
+        }
+    }
+
+    switch (status){
+        case EXECUTE_SUCCESS: break;
+        case EXECUTE_FAILURE: {
+            printf("Execution failed\n");
+            exit(EXIT_FAILURE);
+            break;
+        }
+        case EXECUTE_OVERFLOW:{
+            printf("Binary overflow. Max size is 65Kb\n");
+            exit(EXIT_FAILURE);
+            break;
+        }
+        default: {
+            printf("WTF?\n");
+            raise(SIGSEGV);
+            break;
+        }
+    }
     
-    if (status == COMPILATION_SUCCESS) status = execute_brainfuck();
-    else if (status == COMPILATION_OVERFLOW) {
-        printf("Compilation overflow.\n");
-        exit(EXIT_FAILURE);
-    }
-    else if (status == COMPILATION_FAILURE){
-        printf("Compilation Error!\n");  //TODO: Somehow handle errors.
-        exit(EXIT_FAILURE);
-    } else {
-        printf("WTF?\n");
-        raise(SIGSEGV);
-    }
     return status;
 }
