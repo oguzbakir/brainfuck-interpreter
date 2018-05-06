@@ -1,6 +1,7 @@
 # Brainfuck-Interpreter
 ## Prerequisites
 * gcc
+* brain
 ## How to use
 First of all compile core:
 ```
