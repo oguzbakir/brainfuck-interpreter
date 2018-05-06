@@ -8,9 +8,10 @@
 #define COMPILATION_OVERFLOW        2
 #define COMPILATION_STACKOVERFLOW   3
 #define COMPILATION_WTF             9
-#define EXECUTE_SUCCESS             10 //TODO: Handle execute return codes
+#define EXECUTE_SUCCESS             10
 #define EXECUTE_FAILURE             11
 #define EXECUTE_OVERFLOW            12
+#define EXECUTE_WTF                 19
 #define J_OK                        20
 #define J_ERR                       21
 
@@ -121,8 +122,8 @@ int execute_brainfuck() {
                 if (bin[ptr]) pc = program[pc].operand;
                 break;
             default: {
-                return EXECUTE_FAILURE;
-                break; //TODO: Handle signals
+                return EXECUTE_WTF;
+                break;
             }
         }
         pc++; //Increment program counter every cycle
@@ -201,6 +202,11 @@ int main(int argc, const char * argv[])
         case EXECUTE_OVERFLOW:{
             printf("Binary overflow. Max size is 65Kb\n");
             exit(EXIT_FAILURE);
+            break;
+        }
+        case EXECUTE_WTF:{
+            printf("WTF?\n");
+            raise(SIGSEGV);
             break;
         }
         default: {
