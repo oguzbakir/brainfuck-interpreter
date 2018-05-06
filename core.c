@@ -8,6 +8,9 @@
 #define COMPILATION_OVERFLOW        2
 #define EXECUTE_SUCCESS             10 //TODO: Handle execute return codes
 #define EXECUTE_FAILURE             11
+#define EXECUTE_OVERFLOW            12
+#define J_OK                        20
+#define J_ERR                       21
 
 //Size defns
 #define STACK_SIZE                  4096
@@ -40,6 +43,29 @@ struct instr_t
 
 static struct instr_t program[PROGRAM_SIZE];
 static unsigned int STACK[STACK_SIZE], SP = 0;
+static unsigned int errLine;
+
+int check_jump(FILE* fp){
+    int c;
+    int ret = 0;
+    int cc = 0;
+    while((c = getc(fp)) != EOF){
+        if (ret < 0) break;
+        if (c == '['){
+            ret++; cc++;
+            errLine = cc;
+            continue;
+        }
+        if (c == ']'){
+            ret--; cc++;
+            errLine = cc;
+            continue;
+        }
+        cc++;
+    }
+    if (ret != 0) return J_ERR;
+    return J_OK;
+}
 
 int compile_brainfuck(FILE* fp) {
     unsigned int pc = 0, jmp;
@@ -103,7 +129,7 @@ int execute_brainfuck() {
 
 int main(int argc, const char * argv[])
 {
-    int status;
+    int status, check;
     FILE *fp;
     fp = fopen(argv[1], "r");
     
@@ -116,6 +142,14 @@ int main(int argc, const char * argv[])
         printf("File %s not found\n", argv[1]);
         exit(EXIT_FAILURE);
     }
+
+    check = check_jump(fp);
+    if (check == J_ERR){
+        printf("Character at %u is not closed\n", errLine);
+        exit(EXIT_FAILURE);
+    }
+
+    rewind(fp);
     
     status = compile_brainfuck(fp);
     fclose(fp);
