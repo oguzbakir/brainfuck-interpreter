@@ -9,7 +9,7 @@ gcc core.c -o core
 ```
 Then give input file name as argument:
 ```
-core cool_brainfuck_filename
+./core cool_brainfuck_filename
 ```
 ## The Language
 A Brainfuck program has an implicit byte pointer, called "the pointer", which is free to move around within an array initially all set to zero. The pointer itself is initialized to point to the beginning of this array.
